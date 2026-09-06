@@ -1,0 +1,48 @@
+{
+  "name": "@botiroff/alibi",
+  "version": "0.1.0",
+  "description": "Every green test needs an alibi. Reverts your change, reruns the tests your agent wrote, and reports the ones that never went red.",
+  "keywords": [
+    "testing",
+    "test-quality",
+    "mutation-testing",
+    "vacuous-tests",
+    "coding-agents",
+    "agent-skill",
+    "verification",
+    "ci"
+  ],
+  "license": "MIT",
+  "author": "Doniyor Botirov <hello@dbit.one> (https://dbit.one)",
+  "homepage": "https://github.com/BOTIROFF-D/alibi",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BOTIROFF-D/alibi.git"
+  },
+  "bugs": "https://github.com/BOTIROFF-D/alibi/issues",
+  "type": "module",
+  "engines": {
+    "node": ">=18.17"
+  },
+  "bin": {
+    "alibi": "bin/alibi.js"
+  },
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "SKILL.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test test/*.test.js",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  }
+}

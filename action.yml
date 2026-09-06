@@ -1,0 +1,58 @@
+name: alibi
+description: Revert the change, rerun the tests it added, and fail the build on tests that never went red.
+author: Doniyor Botirov
+branding:
+  icon: search
+  color: red
+
+inputs:
+  base:
+    description: Revision to revert to. Defaults to the base of the pull request, or HEAD.
+    required: false
+    default: ''
+  strict:
+    description: Fail the job on findings that are merely unproven, not only on green lies.
+    required: false
+    default: 'false'
+  mutate:
+    description: Also damage the changed lines and see whether anything objects.
+    required: false
+    default: 'false'
+  summary:
+    description: Write the report to the job summary.
+    required: false
+    default: 'true'
+  version:
+    description: Version of @botiroff/alibi to run.
+    required: false
+    default: 'latest'
+
+outputs:
+  report:
+    description: Path of the JSON report.
+    value: ${{ steps.run.outputs.report }}
+
+runs:
+  using: composite
+  steps:
+    - id: run
+      shell: bash
+      run: |
+        set -o pipefail
+        BASE="${{ inputs.base }}"
+        if [ -z "$BASE" ] && [ -n "${{ github.event.pull_request.base.sha }}" ]; then
+          BASE="${{ github.event.pull_request.base.sha }}"
+        fi
+        ARGS="verify"
+        [ -n "$BASE" ] && ARGS="$ARGS --base $BASE"
+        [ "${{ inputs.strict }}" = "true" ] && ARGS="$ARGS --strict"
+        [ "${{ inputs.mutate }}" = "true" ] && ARGS="$ARGS --mutate"
+
+        npx -y "@botiroff/alibi@${{ inputs.version }}" $ARGS --json > alibi-report.json || STATUS=$?
+        echo "report=alibi-report.json" >> "$GITHUB_OUTPUT"
+
+        if [ "${{ inputs.summary }}" = "true" ]; then
+          npx -y "@botiroff/alibi@${{ inputs.version }}" $ARGS --markdown >> "$GITHUB_STEP_SUMMARY" || true
+        fi
+
+        exit "${STATUS:-0}"

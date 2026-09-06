@@ -1,0 +1,4 @@
+{
+  "title": "The test asserts nothing at all",
+  "expect": "no-assertion"
+}
