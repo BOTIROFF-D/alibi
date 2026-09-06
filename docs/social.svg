@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-label="alibi — every green test needs an alibi">
+  <rect width="1280" height="640" fill="#0d1117"/>
+  <rect x="0" y="0" width="1280" height="6" fill="#f85149"/>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+    <text x="88" y="196" font-size="88" font-weight="700" fill="#e6edf3">alibi</text>
+    <text x="88" y="272" font-size="34" fill="#7d8590">Every green test needs an alibi.</text>
+
+    <text x="88" y="368" font-size="26" fill="#e6edf3">Reverts your change. Reruns the tests your agent just wrote.</text>
+    <text x="88" y="408" font-size="26" fill="#e6edf3">Reports the ones that never went red.</text>
+
+    <g font-size="24">
+      <text x="88" y="486" fill="#f85149">✕</text>
+      <text x="124" y="486" fill="#e6edf3">returns a list</text>
+      <text x="390" y="486" fill="#f85149">NO ALIBI</text>
+      <text x="124" y="522" fill="#7d8590">passes against the source from before the change</text>
+    </g>
+
+    <text x="88" y="586" font-size="22" fill="#7d8590">No model. No network. Any test runner.</text>
+    <text x="1192" y="586" font-size="22" fill="#7d8590" text-anchor="end">github.com/BOTIROFF-D/alibi</text>
+  </g>
+</svg>
