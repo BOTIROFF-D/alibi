@@ -1,0 +1,24 @@
+name: A wrong answer
+description: The tool accused something it should not have, or could not run at all.
+title: "wrong answer: "
+labels: [defect]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A false accusation is the most expensive defect this project can have.
+        Reports of one are handled before anything else.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: The command, the output, and what should have been said instead.
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Runner, Node version, operating system
+    validations:
+      required: true

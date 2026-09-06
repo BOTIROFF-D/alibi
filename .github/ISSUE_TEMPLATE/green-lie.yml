@@ -1,0 +1,39 @@
+name: A green lie this does not catch
+description: A way of making a suite green without making it meaningful, that the report stays quiet about.
+title: "green lie: "
+labels: [museum]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The most useful issue anyone can open. If it is real, it becomes an
+        exhibit in `examples/museum/`, and the test suite fails from then on
+        whenever it stops being caught.
+  - type: textarea
+    id: change
+    attributes:
+      label: The change
+      description: The diff, or the smallest thing that stands in for it — before and after.
+      render: diff
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What should have been said about it
+      description: Which finding you expected, and why the suite is green without deserving to be.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What the report said
+      description: The output of `alibi verify --verbose`, or "nothing".
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: runner
+    attributes:
+      label: Runner and version
+      placeholder: pytest 8.3.4, vitest 2.1.8, go 1.23

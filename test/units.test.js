@@ -7,6 +7,7 @@ import { judge, readClaims } from '../dist/claims.js';
 import { exitCodeFor, toJson, toMarkdown, render } from '../dist/report.js';
 import { parseArgs } from '../dist/cli.js';
 import { planMutants } from '../dist/checks/mutation.js';
+import { firstEvidence } from '../dist/runner.js';
 
 test('a file under a test directory is a test wherever it is', () => {
   assert.equal(roleOf('test/lib.test.js'), 'test');
@@ -250,4 +251,22 @@ test('mutants are planned only for the lines the change touched', () => {
 test('comments are never mutated', () => {
   const source = ['// if (a === b) matters', 'const x = 1;'].join('\n');
   assert.deepEqual(planMutants('src/a.js', source, [1, 2], 5), []);
+});
+
+test('the evidence line skips a runner\u2019s decoration and quotes the failure', () => {
+  const outcome = {
+    exitCode: 1,
+    stdout: [
+      '=================================== FAILURES ===================================',
+      '________________________ test_drops_repeated_ids ________________________',
+      '',
+      'E       assert 2 == 1',
+      '',
+      '=========================== short test summary info ============================',
+    ].join('\n'),
+    stderr: '',
+    durationMs: 1,
+    timedOut: false,
+  };
+  assert.equal(firstEvidence(outcome), 'E       assert 2 == 1');
 });

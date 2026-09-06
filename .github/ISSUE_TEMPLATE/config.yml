@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Whether a verdict is right at all
+    url: https://github.com/BOTIROFF-D/alibi/discussions
+    about: Arguments about what should count as evidence belong in Discussions.

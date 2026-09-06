@@ -298,15 +298,28 @@ export function neverRan(outcome: RunOutcome): boolean {
   return NEVER_RAN.some((re) => re.test(text));
 }
 
-/** The most useful single line of a failing run, for the report. */
+/**
+ * The most useful single line of a failing run, for the report.
+ *
+ * Runners frame their failures in rules of `=` and `-`, and the first line
+ * matching anything interesting is often that frame rather than the reason. So
+ * decoration is dropped first, and a line that actually states a comparison is
+ * preferred over one that merely announces a section.
+ */
+const DECORATION = /^[=\-_*~#\s]+$/;
+
 export function firstEvidence(outcome: RunOutcome): string {
   const lines = `${outcome.stdout}\n${outcome.stderr}`
     .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter((l) => l.length > 0);
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0 && !DECORATION.test(line))
+    .map((line) => line.replace(/^[=\-_]{3,}\s*/, '').replace(/\s*[=\-_]{3,}$/, '').trim())
+    .filter((line) => line.length > 0);
 
-  const interesting = lines.find((l) =>
-    /(AssertionError|assert|Expected|expected|FAILED|FAIL|panic:|Error:|error\[|--- FAIL)/.test(l),
+  const stated = lines.find((line) =>
+    /(AssertionError|^E\s|assert |Expected|expected |panic:|--- FAIL|error\[E)/.test(line),
   );
-  return (interesting ?? lines[lines.length - 1] ?? '').slice(0, 200);
+  const mentioned = lines.find((line) => /(FAILED|FAIL|Error:|error:)/.test(line));
+
+  return (stated ?? mentioned ?? lines[lines.length - 1] ?? '').slice(0, 160);
 }
