@@ -141,12 +141,32 @@ function install(dir, language) {
 }
 
 const candidates = JSON.parse(readFileSync(IN, 'utf8')).candidates.slice(0, TAKE);
-const results = [];
+
+/**
+ * Resume rather than restart.
+ *
+ * A run over two hundred repositories takes hours, and anything learned in the
+ * first hour is a reason to change the tool and go again. Without this, every
+ * such fix costs the whole run, and the tempting alternative is to not fix the
+ * thing. Results already on disk are kept; `--redo` throws them away on
+ * purpose.
+ */
+const previous = argv.includes('--redo') || !existsSync(OUT)
+  ? []
+  : (JSON.parse(readFileSync(OUT, 'utf8')).results ?? []);
+
+const done = new Set(previous.map((r) => `${r.repo}#${r.number}`));
+const results = [...previous];
 let index = 0;
+
+if (done.size > 0) {
+  process.stderr.write(`resuming: ${done.size} pull requests already answered\n`);
+}
 
 for (const candidate of candidates) {
   index++;
   const label = `${candidate.repo}#${candidate.number}`;
+  if (done.has(label)) continue;
   process.stderr.write(`\n[${index}/${candidates.length}] ${label}\n`);
 
   const workspace = mkdtempSync(join(tmpdir(), 'alibi-corpus-'));

@@ -1,6 +1,6 @@
 {
   "name": "@botiroff/alibi",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Every green test needs an alibi. Reverts your change, reruns the tests your agent wrote, and reports the ones that never went red.",
   "keywords": [
     "testing",
