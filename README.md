@@ -2,6 +2,13 @@
 
 <p><strong>Every green test needs an alibi.</strong></p>
 
+<p>
+  <a href="https://www.npmjs.com/package/@botiroff/alibi"><img src="https://img.shields.io/npm/v/@botiroff/alibi?color=f85149&label=npm" alt="npm"></a>
+  <a href="https://github.com/BOTIROFF-D/alibi/actions/workflows/ci.yml"><img src="https://github.com/BOTIROFF-D/alibi/actions/workflows/ci.yml/badge.svg" alt="ci"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT"></a>
+  <img src="https://img.shields.io/badge/runtime%20dependencies-0-3fb950" alt="zero runtime dependencies">
+</p>
+
 Your agent says it fixed the bug and the tests pass. `alibi` puts the source back
 the way it was, runs the tests it just wrote, and reports the ones that still
 pass. A test that has never been red has not tested the change.
@@ -36,6 +43,8 @@ For you and for CI:
 npm install -g @botiroff/alibi
 alibi
 ```
+
+Or without installing anything: `npx @botiroff/alibi`.
 
 Node 18.17 or newer. No runtime dependencies.
 
@@ -132,7 +141,12 @@ suite that does not actually pass. A pattern match never becomes one.
 - uses: BOTIROFF-D/alibi@v0
   with:
     base: ${{ github.event.pull_request.base.sha }}
+    strict: false        # exit 2 on findings that are only unproven
+    mutate: false        # also damage the changed lines
 ```
+
+The action needs the base commit, so give the checkout step some history:
+`actions/checkout@v4` with `fetch-depth: 0`.
 
 Or without the action:
 
