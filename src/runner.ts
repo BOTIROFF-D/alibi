@@ -12,7 +12,7 @@
  */
 
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { TestCase } from './types.js';
 
@@ -179,7 +179,84 @@ export function detectRunner(root: string): Runner | null {
   if (has('.rspec', 'spec/spec_helper.rb')) return (RUNNERS['rspec'] as (r: string) => Runner)(root);
   if (has('phpunit.xml', 'phpunit.xml.dist')) return (RUNNERS['phpunit'] as (r: string) => Runner)(root);
   if (pkg) return (RUNNERS['node'] as (r: string) => Runner)(root);
+
+  /*
+   * Last resort: the tests themselves.
+   *
+   * A configuration file is the better evidence and is tried first, but plenty
+   * of projects have a `tests/` directory full of `test_*.py` and nothing else
+   * — no pytest.ini, no pyproject.toml, no requirements.txt — and running
+   * pytest in them works exactly as their authors expect. Refusing to answer
+   * there was refusing over a missing file rather than a missing runner.
+   */
+  const byFile = detectFromTestFiles(root);
+  if (byFile) return (RUNNERS[byFile] as (r: string) => Runner)(root);
+
   return null;
+}
+
+const SHAPES: { id: string; re: RegExp }[] = [
+  { id: 'pytest', re: /^(test_.+\.py|.+_test\.py)$/ },
+  { id: 'go', re: /^.+_test\.go$/ },
+  { id: 'rspec', re: /^.+_spec\.rb$/ },
+];
+
+const NOT_WORTH_WALKING = new Set([
+  'node_modules',
+  'dist',
+  'build',
+  'target',
+  'vendor',
+  '.git',
+  '.venv',
+  'venv',
+  '__pycache__',
+  '.tox',
+  'site-packages',
+]);
+
+/**
+ * Looks for files whose names are a test convention, three directories deep.
+ *
+ * Shallow on purpose. This runs before anything else the tool does, in
+ * repositories of unknown size, and a full walk of a monorepo to answer a
+ * question a config file usually answers is not worth the seconds.
+ */
+function detectFromTestFiles(root: string, depth = 3): string | null {
+  const counts = new Map<string, number>();
+
+  const walk = (dir: string, left: number): void => {
+    if (left < 0) return;
+    let entries;
+    try {
+      entries = readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      if (entry.name.startsWith('.') && entry.name !== '.') continue;
+      if (entry.isDirectory()) {
+        if (NOT_WORTH_WALKING.has(entry.name)) continue;
+        walk(join(dir, entry.name), left - 1);
+        continue;
+      }
+      for (const shape of SHAPES) {
+        if (shape.re.test(entry.name)) counts.set(shape.id, (counts.get(shape.id) ?? 0) + 1);
+      }
+    }
+  };
+
+  walk(root, depth);
+
+  let best: string | null = null;
+  let most = 0;
+  for (const [id, count] of counts) {
+    if (count > most) {
+      most = count;
+      best = id;
+    }
+  }
+  return best;
 }
 
 export function runnerById(id: string, root: string): Runner | null {

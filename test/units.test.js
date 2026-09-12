@@ -7,7 +7,10 @@ import { judge, readClaims } from '../dist/claims.js';
 import { exitCodeFor, toJson, toMarkdown, render } from '../dist/report.js';
 import { parseArgs } from '../dist/cli.js';
 import { planMutants } from '../dist/checks/mutation.js';
-import { firstEvidence, neverRan } from '../dist/runner.js';
+import { firstEvidence, neverRan, detectRunner } from '../dist/runner.js';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 test('a file under a test directory is a test wherever it is', () => {
   assert.equal(roleOf('test/lib.test.js'), 'test');
@@ -296,4 +299,53 @@ test('a run that stopped before any check is provisional', () => {
   assert.equal(neverRan(outcomeOf('./store_test.go:9:12: undefined: Dedupe')), true);
   assert.equal(neverRan(outcomeOf('TypeError: dedupe is not a function')), true);
   assert.equal(neverRan(outcomeOf('collected 0 items')), true);
+});
+
+test('a python project with only a tests directory still gets a runner', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'alibi-detect-'));
+  try {
+    mkdirSync(join(dir, 'tests'));
+    writeFileSync(join(dir, 'tests', 'test_thing.py'), 'def test_x():\n    assert 1 == 1\n');
+    writeFileSync(join(dir, 'README.md'), '# nothing else here\n');
+    assert.equal(detectRunner(dir)?.id, 'pytest');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a declared dependency still beats a filename convention', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'alibi-detect-'));
+  try {
+    mkdirSync(join(dir, 'tests'));
+    writeFileSync(join(dir, 'tests', 'test_thing.py'), 'def test_x():\n    assert 1 == 1\n');
+    writeFileSync(
+      join(dir, 'package.json'),
+      JSON.stringify({ name: 'x', devDependencies: { vitest: '^2' } }),
+    );
+    assert.equal(detectRunner(dir)?.id, 'vitest');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a repository with nothing that looks like a test gets no runner', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'alibi-detect-'));
+  try {
+    writeFileSync(join(dir, 'main.c'), 'int main(void) { return 0; }\n');
+    assert.equal(detectRunner(dir), null);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('node_modules is not walked looking for tests', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'alibi-detect-'));
+  try {
+    mkdirSync(join(dir, 'node_modules', 'dep', 'tests'), { recursive: true });
+    writeFileSync(join(dir, 'node_modules', 'dep', 'tests', 'test_dep.py'), 'def test_x(): pass\n');
+    writeFileSync(join(dir, 'main.c'), 'int main(void) { return 0; }\n');
+    assert.equal(detectRunner(dir), null);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });

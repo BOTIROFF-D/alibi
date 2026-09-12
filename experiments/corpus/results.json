@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-12T10:04:37.319Z",
+  "generatedAt": "2026-09-12T10:05:14.481Z",
   "results": [
     {
       "repo": "Apofixc/MyCad",
@@ -163,6 +163,45 @@
       "outcome": "dropped",
       "why": "the suite needs infrastructure this harness does not provide",
       "baselineExcerpt": "=========================== short test summary info ============================ | ERROR grantsight/tests/test_pipeline.py | !!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!! | 1 error in 0.12s"
+    },
+    {
+      "repo": "najierwilliams/Tomorrow-is-gone",
+      "number": 11,
+      "author": "copilot-swe-agent[bot]",
+      "language": "python",
+      "title": "Phase 5: finalize authoritative runtime contracts for Unity integration readiness",
+      "base": "3fdad1b24af869c0b7b436d8dd4420c1fbbb4483",
+      "head": "2a1057819df6f01f7dd5c5f1228ad8325dc597b0",
+      "cloneUrl": "https://github.com/najierwilliams/Tomorrow-is-gone.git",
+      "defaultBranch": "main",
+      "stars": 1,
+      "tests": 1,
+      "sources": 4,
+      "additions": 1176,
+      "mergedAt": "2026-09-12T09:07:14Z",
+      "install": "venv",
+      "outcome": "dropped",
+      "why": "harness error: no test runner found. Pass --runner, or put a command in alibi.json — see the README."
+    },
+    {
+      "repo": "evgenygurin/dj-music-plugin",
+      "number": 26,
+      "author": "codegen-sh[bot]",
+      "language": "python",
+      "title": "feat: transition candidate pruning + embedding storage",
+      "base": "723b820d5272d958ffae142210c2b73c974d2a0f",
+      "head": "8b4a1ff5148837d3dca2d43be14e205485486d3b",
+      "cloneUrl": "https://github.com/evgenygurin/dj-music-plugin.git",
+      "defaultBranch": "main",
+      "stars": 1,
+      "tests": 3,
+      "sources": 4,
+      "additions": 1272,
+      "mergedAt": "2026-03-26T01:53:46Z",
+      "install": "venv + editable install",
+      "outcome": "dropped",
+      "why": "suite already failing at the base commit",
+      "baselineExcerpt": "ERROR tests/test_tools/test_search.py::test_unlock_tools_invalid_category - AssertionError | ERROR tests/test_tools/test_search.py::test_list_platforms - AssertionError | ERROR tests/test_tools/test_search.py::test_list_platforms_empty - AssertionError | 72 failed, 348 passed, 4 skipped, 79 warnings"
     }
   ]
 }
