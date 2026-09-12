@@ -38,14 +38,36 @@ const INSTALL_TIMEOUT = 420_000;
 const SUITE_TIMEOUT = 300_000;
 const TEST_TIMEOUT = 90_000;
 
-function shell(cmd, args, cwd, timeout) {
+function shell(cmd, args, cwd, timeout, extraPath) {
+  const PATH = extraPath ? `${extraPath}:${process.env.PATH}` : process.env.PATH;
   return spawnSync(cmd, args, {
     cwd,
     encoding: 'utf8',
     timeout,
     maxBuffer: 64 * 1024 * 1024,
-    env: { ...process.env, CI: '1', NO_COLOR: '1', HUSKY: '0', npm_config_audit: 'false', npm_config_fund: 'false' },
+    env: {
+      ...process.env,
+      PATH,
+      CI: '1',
+      NO_COLOR: '1',
+      HUSKY: '0',
+      npm_config_audit: 'false',
+      npm_config_fund: 'false',
+    },
   });
+}
+
+/**
+ * The virtualenv is put on PATH rather than passed to the tool as a command.
+ *
+ * The tool resolves `python3` from the environment, exactly as it would for a
+ * developer with an activated virtualenv. Handing it an explicit interpreter
+ * here would exercise a path through the tool that no real user takes, and the
+ * corpus would then be measuring something slightly different from the thing
+ * people install.
+ */
+function venvPath(dir, language) {
+  return language === 'python' ? join(dir, '.venv', 'bin') : undefined;
 }
 
 /**
@@ -58,15 +80,40 @@ function shell(cmd, args, cwd, timeout) {
  */
 function install(dir, language) {
   if (language === 'python') {
+    /*
+     * A virtualenv per repository, not the system interpreter.
+     *
+     * Two reasons, and only the second is about correctness. A modern
+     * Homebrew or Debian python refuses `pip install` outright with
+     * "externally-managed-environment", so without this every Python pull
+     * request would be dropped for a reason that is about this machine rather
+     * than about the corpus. And installing 71 repositories' dependencies into
+     * one interpreter would let the fifth repository decide what the fiftieth
+     * imports.
+     */
+    const venv = join(dir, '.venv');
+    const made = shell('python3', ['-m', 'venv', venv], dir, INSTALL_TIMEOUT);
+    if (made.status !== 0) return { ok: false, why: 'could not create a virtualenv' };
+
+    const pip = join(venv, 'bin', 'pip');
+    shell(pip, ['install', '-q', '--upgrade', 'pip', 'setuptools', 'wheel'], dir, INSTALL_TIMEOUT);
+
+    let how = 'venv';
     if (existsSync(join(dir, 'requirements.txt'))) {
-      const run = shell('python3', ['-m', 'pip', 'install', '-q', '-r', 'requirements.txt'], dir, INSTALL_TIMEOUT);
-      return run.status === 0 ? { ok: true, how: 'pip -r requirements.txt' } : { ok: false, why: 'pip install failed' };
+      const run = shell(pip, ['install', '-q', '-r', 'requirements.txt'], dir, INSTALL_TIMEOUT);
+      if (run.status !== 0) return { ok: false, why: 'pip install -r requirements.txt failed' };
+      how = 'venv + requirements.txt';
+    } else if (existsSync(join(dir, 'pyproject.toml')) || existsSync(join(dir, 'setup.py'))) {
+      const run = shell(pip, ['install', '-q', '-e', '.'], dir, INSTALL_TIMEOUT);
+      if (run.status !== 0) return { ok: false, why: 'pip install -e . failed' };
+      how = 'venv + editable install';
     }
-    if (existsSync(join(dir, 'pyproject.toml'))) {
-      const run = shell('python3', ['-m', 'pip', 'install', '-q', '-e', '.'], dir, INSTALL_TIMEOUT);
-      return run.status === 0 ? { ok: true, how: 'pip -e .' } : { ok: false, why: 'pip install failed' };
-    }
-    return { ok: true, how: 'nothing to install' };
+
+    /* The suite has to be runnable even when the project never lists its runner. */
+    const runner = shell(pip, ['install', '-q', 'pytest'], dir, INSTALL_TIMEOUT);
+    if (runner.status !== 0) return { ok: false, why: 'could not install pytest' };
+
+    return { ok: true, how };
   }
 
   if (language === 'go') {
@@ -156,7 +203,8 @@ for (const candidate of candidates) {
         : candidate.language === 'go'
           ? ['go', ['test', './...']]
           : ['npm', ['test']];
-    const baselineRun = shell(suiteCommand[0], suiteCommand[1], dir, SUITE_TIMEOUT);
+    const onPath = venvPath(dir, candidate.language);
+    const baselineRun = shell(suiteCommand[0], suiteCommand[1], dir, SUITE_TIMEOUT, onPath);
 
     if (baselineRun.status !== 0) {
       /*
@@ -230,6 +278,8 @@ for (const candidate of candidates) {
     }
 
     process.stderr.write('      alibi… ');
+    const restorePath = process.env.PATH;
+    if (onPath) process.env.PATH = `${onPath}:${restorePath}`;
     const report = verify({
       cwd: dir,
       base: candidate.base,
@@ -237,6 +287,8 @@ for (const candidate of candidates) {
       suite: false,
       link: ['node_modules', '.venv', 'vendor'],
     });
+
+    process.env.PATH = restorePath;
 
     const examined = report.results.filter((r) => r.verdict === 'alibi' || r.verdict === 'none');
     const without = report.results.filter((r) => r.verdict === 'none' && !r.test.exempt);

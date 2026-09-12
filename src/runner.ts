@@ -271,7 +271,28 @@ export function run(invocation: Invocation, cwd: string, timeoutMs: number): Run
  * for a module that does not exist yet cannot import it, and the runner exits
  * non-zero without ever evaluating an assertion. Counting that as proof would
  * hand an alibi to every test written against new code, which is most of them.
+ *
+ * The two lists below are consulted in order rather than weighed against each
+ * other. Evidence that the test *ran* settles the question outright, and only
+ * in its absence does the second list get a say. Without that precedence a
+ * real assertion failure whose message happens to contain "is not a function"
+ * — which is what a great many honest failures say — is filed as never having
+ * run and quietly leaves every denominator it belonged in.
  */
+
+/** Proof that a test body was entered and a check was made. */
+const DEFINITELY_RAN = [
+  /AssertionError/,
+  /^\s*E\s+assert\b/m,
+  /--- FAIL:/,
+  /\bexpect\([^)]*\)\s*\.\s*\w+/,
+  /Expected:[\s\S]{0,200}Received:/,
+  /expected .* (to|but) /i,
+  /\bFAILED\b[^\n]*::/,
+  /thread '[^']*' panicked/,
+];
+
+/** Signs that execution stopped before any check could be made. */
 const NEVER_RAN = [
   /ModuleNotFoundError/,
   /ImportError/,
@@ -281,20 +302,22 @@ const NEVER_RAN = [
   /Could not resolve/,
   /SyntaxError/,
   /ReferenceError: \w+ is not defined/,
-  /is not a function/,
-  /undefined: /,
+  /\bis not a function\b/,
+  /^\S*\.go:\d+:\d+: undefined: /m,
+  /^\S*\.go:\d+:\d+: [^\n]*not enough arguments/m,
   /error\[E0(425|432|433|412)\]/,
   /cannot find (function|value|type|crate)/,
   /NameError/,
   /AttributeError: module/,
   /no test files/i,
   /No tests found/i,
-  /Unknown at rule/,
+  /collected 0 items/,
   /class .* not found/i,
 ];
 
 export function neverRan(outcome: RunOutcome): boolean {
   const text = `${outcome.stdout}\n${outcome.stderr}`;
+  if (DEFINITELY_RAN.some((re) => re.test(text))) return false;
   return NEVER_RAN.some((re) => re.test(text));
 }
 

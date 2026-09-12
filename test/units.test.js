@@ -7,7 +7,7 @@ import { judge, readClaims } from '../dist/claims.js';
 import { exitCodeFor, toJson, toMarkdown, render } from '../dist/report.js';
 import { parseArgs } from '../dist/cli.js';
 import { planMutants } from '../dist/checks/mutation.js';
-import { firstEvidence } from '../dist/runner.js';
+import { firstEvidence, neverRan } from '../dist/runner.js';
 
 test('a file under a test directory is a test wherever it is', () => {
   assert.equal(roleOf('test/lib.test.js'), 'test');
@@ -269,4 +269,31 @@ test('the evidence line skips a runner\u2019s decoration and quotes the failure'
     timedOut: false,
   };
   assert.equal(firstEvidence(outcome), 'E       assert 2 == 1');
+});
+
+/*
+ * The precedence between the two lists in `neverRan` is the load-bearing part.
+ * A test that genuinely failed but whose message happens to contain a phrase
+ * from the never-ran list would otherwise be dropped from every count it
+ * belonged in — and silently, which is the worst way to be wrong here.
+ */
+const outcomeOf = (text) => ({ stdout: text, stderr: '', exitCode: 1, durationMs: 1, timedOut: false });
+
+test('a test that reached an assertion is never called provisional', () => {
+  assert.equal(neverRan(outcomeOf('AssertionError: expected 2 to equal 1')), false);
+  assert.equal(neverRan(outcomeOf('E       assert 2 == 1')), false);
+  assert.equal(neverRan(outcomeOf('--- FAIL: TestDedupe (0.00s)')), false);
+});
+
+test('a failure message may quote the words that mean "never ran"', () => {
+  assert.equal(neverRan(outcomeOf("AssertionError: expected 'undefined: value' to equal 'ok'")), false);
+  assert.equal(neverRan(outcomeOf('AssertionError: expected callback is not a function')), false);
+});
+
+test('a run that stopped before any check is provisional', () => {
+  assert.equal(neverRan(outcomeOf("Error: Cannot find module '../src/cache.js'")), true);
+  assert.equal(neverRan(outcomeOf('ModuleNotFoundError: No module named \'src.cache\'')), true);
+  assert.equal(neverRan(outcomeOf('./store_test.go:9:12: undefined: Dedupe')), true);
+  assert.equal(neverRan(outcomeOf('TypeError: dedupe is not a function')), true);
+  assert.equal(neverRan(outcomeOf('collected 0 items')), true);
 });
