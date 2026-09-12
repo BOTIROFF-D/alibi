@@ -33,7 +33,7 @@
   "files": [
     "bin",
     "dist",
-    "SKILL.md"
+    "skills"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",

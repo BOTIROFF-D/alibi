@@ -238,8 +238,8 @@ more, because the thing writing the test is also the thing reporting on it.
 
 ## Installing by hand
 
-`SKILL.md` at the root of this repository is the whole integration. Copy it to
-wherever your agent reads instructions from:
+`skills/alibi/SKILL.md` is the whole integration. Copy it to wherever your agent
+reads instructions from:
 
 | Agent | Path |
 | --- | --- |

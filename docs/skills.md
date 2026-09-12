@@ -1,7 +1,7 @@
 # Installing into a coding agent
 
-`SKILL.md` at the root of this repository is the whole integration. The
-`skills` CLI copies it into whichever agents it finds:
+`skills/alibi/SKILL.md` is the whole integration. The `skills` CLI copies that
+directory into whichever agents it finds:
 
 ```
 npx skills add BOTIROFF-D/alibi          # every agent on this machine
@@ -11,7 +11,7 @@ npx skills add BOTIROFF-D/alibi --agent claude-code
 
 ## By hand
 
-Copy `SKILL.md` to wherever your agent reads instructions from. The file is
+Copy `skills/alibi/SKILL.md` to wherever your agent reads instructions from. The file is
 plain Markdown with YAML front matter; nothing in it is specific to a vendor.
 
 | Agent | Path |
