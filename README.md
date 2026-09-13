@@ -208,9 +208,13 @@ Read these before trusting a green report.
   a lie. A test asserting `toBeDefined` on a function that used to return
   `undefined` is a real test; the report says *unproven* and leaves the reading
   to you.
-- **Editable Python installs** can import the installed copy instead of the
-  worktree. `PYTHONPATH` is set to the worktree root to shadow it, which works
-  for a plain source tree and not for every packaging arrangement.
+- **Editable Python installs** point an absolute path at your working tree, so
+  a run inside the throwaway worktree can import the new code and pass there —
+  the tool then accusing a perfectly good test. The worktree is put first on
+  `PYTHONPATH` to shadow the installed copy, which works for a plain source
+  tree and for the common `src/` layout, and does not work for every packaging
+  arrangement. If a Python project reports implausibly many tests without an
+  alibi, this is the first thing to suspect.
 - **The tests are run one process each.** On a suite with heavy global setup
   this is slow. `--no-suite` and a smaller diff help; a fast mode that trusts
   parsed output does not exist, because parsed output is what this tool

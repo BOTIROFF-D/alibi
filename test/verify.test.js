@@ -287,3 +287,42 @@ export function isReady(state) {
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+/*
+ * The bug this guards against was found by measuring a corpus rather than by
+ * reading the code, and it pointed the wrong way: an editable install made a
+ * test import the *new* source from inside the worktree, so the test passed
+ * there and a perfectly good test was reported as having no alibi. The README
+ * claimed PYTHONPATH was set to prevent exactly this; it was not.
+ */
+test('a run inside the worktree prefers the worktree over an installed copy', () => {
+  const dir = makeRepo();
+  try {
+    writeFileSync(join(dir, 'src/lib.js'), FIXED);
+    writeFileSync(
+      join(dir, 'test/lib.test.js'),
+      `${BASE_TESTS}
+test('drops repeated ids', () => {
+  assert.equal(dedupe([{ id: 'a' }, { id: 'a' }]).length, 1);
+});
+`,
+    );
+
+    /*
+     * PYTHONPATH already carrying somewhere else must not be dropped, only
+     * outranked — a project that needs its own entry on there still needs it.
+     */
+    const before = process.env.PYTHONPATH;
+    process.env.PYTHONPATH = '/somewhere/else';
+    try {
+      const report = verify({ cwd: dir, suite: false });
+      const [result] = report.results.filter((r) => r.test.name === 'drops repeated ids');
+      assert.equal(result.verdict, 'alibi');
+    } finally {
+      if (before === undefined) delete process.env.PYTHONPATH;
+      else process.env.PYTHONPATH = before;
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

@@ -323,14 +323,41 @@ function cleanEnv(extra?: Record<string, string>): NodeJS.ProcessEnv {
   return env;
 }
 
-export function run(invocation: Invocation, cwd: string, timeoutMs: number): RunOutcome {
+/**
+ * Makes an interpreter prefer the tree it was pointed at.
+ *
+ * An editable Python install (`pip install -e .`) writes an absolute path to
+ * the original working tree into site-packages. A test run inside the
+ * throwaway worktree then imports the *new* source through that path, passes,
+ * and is reported as having no alibi — the tool accusing a perfectly good test
+ * because it never actually ran against the old code.
+ *
+ * Putting the worktree first on PYTHONPATH shadows the installed copy. It is
+ * not a guarantee: a project installed non-editably, or one whose package
+ * lives under `src/`, can still resolve elsewhere. The README says so, and
+ * `alibi doctor` says so about the repository in front of it.
+ */
+function shadowInstalled(root: string, env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  const existing = env['PYTHONPATH'];
+  env['PYTHONPATH'] = existing ? `${root}:${existing}` : root;
+  return env;
+}
+
+export function run(
+  invocation: Invocation,
+  cwd: string,
+  timeoutMs: number,
+  /** When given, the tree whose copy of the code must win over any installed one. */
+  preferTree?: string,
+): RunOutcome {
   const started = Date.now();
+  const env = cleanEnv(invocation.env);
   const result = spawnSync(invocation.cmd, invocation.args, {
     cwd,
     encoding: 'utf8',
     timeout: timeoutMs,
     maxBuffer: 32 * 1024 * 1024,
-    env: cleanEnv(invocation.env),
+    env: preferTree ? shadowInstalled(preferTree, env) : env,
   });
   return {
     exitCode: result.status,

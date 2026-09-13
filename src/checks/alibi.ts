@@ -77,7 +77,7 @@ export function runAlibiCheck(
         continue;
       }
 
-      const outcome = run(options.runner.one(test), worktree.dir, options.timeoutMs);
+      const outcome = run(options.runner.one(test), worktree.dir, options.timeoutMs, worktree.dir);
 
       if (outcome.timedOut) {
         results.push({
