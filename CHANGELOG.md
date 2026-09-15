@@ -4,6 +4,28 @@ All notable changes to this project are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the versions
 follow [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] — 2026-09-15
+
+### Fixed
+
+- **It could accuse a perfectly good test.** `PYTHONPATH` reorders the import
+  search; it cannot stop it. A module the base commit never had is not in the
+  worktree at all, so Python keeps walking and finds the new one through an
+  editable install. The test then passed against code that was supposed to be
+  reverted and was reported as a green lie — the most expensive mistake this
+  tool can make. It now imports the changed package inside the worktree and
+  checks where it came from; a path outside means those tests are reported as
+  unanswered, naming the module and the path it leaked to.
+
+### Changed
+
+- The README leads with the sentence every user of a coding agent has read
+  rather than with a metaphor, and the idea is three numbered steps.
+- **The skill no longer needs anything installed.** It walks the agent through
+  the check with plain git and the project's own test command, so it works in
+  a repository that has never seen node. The one-command version is still
+  there for anyone who wants the worktree and cleanup handled.
+
 ## [0.1.1] — 2026-09-12
 
 Three fixes, all found by running the tool against a corpus of merged pull

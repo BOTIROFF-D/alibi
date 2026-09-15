@@ -1,7 +1,7 @@
 {
   "name": "@botiroff/alibi",
-  "version": "0.1.1",
-  "description": "Every green test needs an alibi. Reverts your change, reruns the tests your agent wrote, and reports the ones that never went red.",
+  "version": "0.1.2",
+  "description": "Your agent says \"Done. All tests pass.\" This reverts the fix, runs the new test again, and shows you the ones that still pass.",
   "keywords": [
     "testing",
     "test-quality",

@@ -32,7 +32,7 @@ import { findingsFrom } from './report.js';
 import { detectRunner, run, runnerById, templateRunner, type Runner } from './runner.js';
 import type { ChangedFile, Finding, Report, TestCase } from './types.js';
 
-export const VERSION = '0.1.1';
+export const VERSION = '0.1.2';
 
 export interface VerifyOptions {
   cwd: string;
