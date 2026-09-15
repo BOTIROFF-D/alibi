@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-13T14:08:17.992Z",
+  "generatedAt": "2026-09-15T07:38:13.484Z",
   "results": [
     {
       "repo": "burenk0v/eiksy",
@@ -3911,198 +3911,6 @@
       ]
     },
     {
-      "repo": "amarazzi/argentina-news-digest",
-      "number": 9,
-      "author": "devin-ai-integration[bot]",
-      "language": "python",
-      "title": "verificador: no se publica un dato que no esté en los titulares",
-      "base": "e308eb79b19797bd25e0fc62ef7d7d451cd0e8de",
-      "head": "af97635c921ccfd4d937ee8e8d281c162c76f2d7",
-      "cloneUrl": "https://github.com/amarazzi/argentina-news-digest.git",
-      "defaultBranch": "main",
-      "stars": 0,
-      "tests": 4,
-      "sources": 11,
-      "additions": 1369,
-      "mergedAt": "2026-09-11T19:06:16Z",
-      "install": "venv + editable install",
-      "outcome": "measured",
-      "examined": 39,
-      "withAlibi": 6,
-      "withoutAlibi": 33,
-      "provisional": 0,
-      "errored": 0,
-      "removals": 0,
-      "vacuous": 3,
-      "names": [
-        {
-          "test": "test_avisa_cuando_el_dia_salio_flojo",
-          "file": "tests/test_alert.py",
-          "line": 19
-        },
-        {
-          "test": "test_no_avisa_cuando_el_dia_estuvo_normal",
-          "file": "tests/test_alert.py",
-          "line": 29
-        },
-        {
-          "test": "test_un_aviso_que_falla_no_rompe_la_corrida",
-          "file": "tests/test_alert.py",
-          "line": 38
-        },
-        {
-          "test": "test_sin_telegram_el_aviso_queda_en_el_log",
-          "file": "tests/test_alert.py",
-          "line": 47
-        },
-        {
-          "test": "test_el_token_no_sale_en_los_logs",
-          "file": "tests/test_alert.py",
-          "line": 58
-        },
-        {
-          "test": "test_el_deporte_entra_solo_si_es_un_hito",
-          "file": "tests/test_judge.py",
-          "line": 56
-        },
-        {
-          "test": "test_lo_internacional_entra_solo_si_es_extraordinario",
-          "file": "tests/test_judge.py",
-          "line": 70
-        },
-        {
-          "test": "test_un_desarrollo_entra_y_la_repeticion_no",
-          "file": "tests/test_judge.py",
-          "line": 82
-        },
-        {
-          "test": "test_el_anticipo_no_entra_aunque_sea_importante",
-          "file": "tests/test_judge.py",
-          "line": 96
-        },
-        {
-          "test": "test_el_servicio_no_entra",
-          "file": "tests/test_judge.py",
-          "line": 103
-        },
-        {
-          "test": "test_un_hecho_nacional_necesita_cobertura",
-          "file": "tests/test_judge.py",
-          "line": 107
-        },
-        {
-          "test": "test_el_techo_manda",
-          "file": "tests/test_judge.py",
-          "line": 115
-        },
-        {
-          "test": "test_ordena_por_importancia",
-          "file": "tests/test_judge.py",
-          "line": 122
-        },
-        {
-          "test": "test_un_id_que_no_pedi_se_ignora_sin_romper_la_corrida",
-          "file": "tests/test_judge.py",
-          "line": 155
-        },
-        {
-          "test": "test_si_se_saltea_un_grupo_la_respuesta_no_sirve",
-          "file": "tests/test_judge.py",
-          "line": 166
-        },
-        {
-          "test": "test_json_invalido_no_sirve",
-          "file": "tests/test_judge.py",
-          "line": 174
-        },
-        {
-          "test": "test_acepta_la_lista_envuelta_en_un_objeto",
-          "file": "tests/test_judge.py",
-          "line": 179
-        },
-        {
-          "test": "test_reintenta_una_vez_y_despues_se_rinde",
-          "file": "tests/test_judge.py",
-          "line": 188
-        },
-        {
-          "test": "test_la_segunda_respuesta_vale",
-          "file": "tests/test_judge.py",
-          "line": 198
-        },
-        {
-          "test": "test_la_misma_cifra_escrita_distinto_es_la_misma",
-          "file": "tests/test_verify.py",
-          "line": 29
-        },
-        {
-          "test": "test_fold_saca_tildes_y_mayusculas",
-          "file": "tests/test_verify.py",
-          "line": 33
-        },
-        {
-          "test": "test_los_nombres_se_agrupan_por_aparicion",
-          "file": "tests/test_verify.py",
-          "line": 37
-        },
-        {
-          "test": "test_una_cifra_que_no_esta_en_los_titulares_se_marca",
-          "file": "tests/test_verify.py",
-          "line": 44
-        },
-        {
-          "test": "test_la_cifra_que_esta_en_el_copete_pasa",
-          "file": "tests/test_verify.py",
-          "line": 51
-        },
-        {
-          "test": "test_el_numero_del_bloque_no_cuenta_como_dato",
-          "file": "tests/test_verify.py",
-          "line": 57
-        },
-        {
-          "test": "test_un_nombre_inventado_se_marca",
-          "file": "tests/test_verify.py",
-          "line": 63
-        },
-        {
-          "test": "test_completar_el_nombre_de_pila_no_es_inventar",
-          "file": "tests/test_verify.py",
-          "line": 71
-        },
-        {
-          "test": "test_el_texto_fiel_no_marca_nada",
-          "file": "tests/test_verify.py",
-          "line": 77
-        },
-        {
-          "test": "test_los_acentos_y_las_mayusculas_no_alcanzan_para_marcar",
-          "file": "tests/test_verify.py",
-          "line": 89
-        },
-        {
-          "test": "test_solo_mira_las_notas_que_vio_el_modelo",
-          "file": "tests/test_verify.py",
-          "line": 95
-        },
-        {
-          "test": "test_la_mayuscula_de_arranque_de_oracion_no_es_un_nombre",
-          "file": "tests/test_verify.py",
-          "line": 100
-        },
-        {
-          "test": "test_el_titular_del_bloque_no_encadena_con_el_texto",
-          "file": "tests/test_verify.py",
-          "line": 114
-        },
-        {
-          "test": "test_compose_no_toca_el_bloque_fiel_a_los_titulares",
-          "file": "tests/test_write.py",
-          "line": 320
-        }
-      ]
-    },
-    {
       "repo": "AlexanderMattTurner/agent-glovebox",
       "number": 6252,
       "author": "claude[bot]",
@@ -4379,6 +4187,27 @@
       "outcome": "dropped",
       "why": "the suite needs infrastructure this harness does not provide",
       "baselineExcerpt": "ERROR repondeur-facebook/tests/test_series_essai.py | ERROR visual_library/tests/test_note_telephone.py | !!!!!!!!!!!!!!!!!!! Interrupted: 66 errors during collection !!!!!!!!!!!!!!!!!!! | 1 warning, 66 errors in 0.58s"
+    },
+    {
+      "repo": "amarazzi/argentina-news-digest",
+      "number": 9,
+      "author": "devin-ai-integration[bot]",
+      "language": "python",
+      "title": "verificador: no se publica un dato que no esté en los titulares",
+      "base": "e308eb79b19797bd25e0fc62ef7d7d451cd0e8de",
+      "head": "af97635c921ccfd4d937ee8e8d281c162c76f2d7",
+      "cloneUrl": "https://github.com/amarazzi/argentina-news-digest.git",
+      "defaultBranch": "main",
+      "stars": 0,
+      "tests": 4,
+      "sources": 11,
+      "additions": 1369,
+      "mergedAt": "2026-09-11T19:06:16Z",
+      "install": "venv + editable install",
+      "outcome": "dropped",
+      "why": "no test produced a definitive answer against the base source",
+      "provisional": 0,
+      "errored": 39
     }
   ]
 }

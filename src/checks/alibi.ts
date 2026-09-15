@@ -14,6 +14,7 @@
 
 import { copyInto, createWorktree, linkInto } from '../git.js';
 import { firstEvidence, neverRan, run, type Runner } from '../runner.js';
+import { findLeaks, type Leak } from './leak.js';
 import type { AlibiResult, ChangedFile, TestCase } from '../types.js';
 
 export interface AlibiOptions {
@@ -34,6 +35,8 @@ export interface AlibiRun {
   hadSourceChange: boolean;
   /** Paths the run could not put back, e.g. Rust files with inline tests. */
   unverifiable: string[];
+  /** Imports that reached outside the reverted tree; see `checks/leak.ts`. */
+  leaks: Leak[];
 }
 
 export function runAlibiCheck(
@@ -46,11 +49,12 @@ export function runAlibiCheck(
   const unverifiable: string[] = [];
 
   if (tests.length === 0) {
-    return { results: [], hadSourceChange: sourceChanges.length > 0, unverifiable };
+    return { results: [], hadSourceChange: sourceChanges.length > 0, unverifiable, leaks: [] };
   }
 
   const worktree = createWorktree(options.base, options.root);
   const results: AlibiResult[] = [];
+  let leaks: Leak[] = [];
 
   try {
     for (const path of [...options.runner.linkPaths, ...options.link]) {
@@ -67,8 +71,33 @@ export function runAlibiCheck(
       copyInto(worktree.dir, options.root, file.path);
     }
 
+    /*
+     * Asked once, before anything is run. If the reverted tree is not the one
+     * being imported, every verdict below would be about the new code, and the
+     * honest thing is to answer nothing rather than to accuse.
+     */
+    leaks = findLeaks(worktree.dir, changed, {
+      ...process.env,
+      PYTHONPATH: [worktree.dir, process.env['PYTHONPATH']].filter(Boolean).join(':'),
+      PYTHONDONTWRITEBYTECODE: '1',
+    });
+
     let index = 0;
     for (const test of tests) {
+      if (leaks.length > 0 && test.language === 'python') {
+        const leak = leaks[0] as Leak;
+        results.push({
+          test,
+          verdict: 'error',
+          exitCode: null,
+          durationMs: 0,
+          evidence:
+            `cannot revert: "${leak.module}" is imported from ${leak.resolvedTo}, outside the ` +
+            'reverted tree — an editable install shadows it. Reinstall without -e, or set a ' +
+            'command in alibi.json that runs from the source tree.',
+        });
+        continue;
+      }
       index++;
       options.onProgress?.(test, index, tests.length);
 
@@ -113,7 +142,7 @@ export function runAlibiCheck(
     worktree.dispose();
   }
 
-  return { results, hadSourceChange: sourceChanges.length > 0, unverifiable };
+  return { results, hadSourceChange: sourceChanges.length > 0, unverifiable, leaks };
 }
 
 /**
