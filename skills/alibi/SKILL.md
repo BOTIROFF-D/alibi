@@ -78,6 +78,42 @@ Either strengthen it, or mark it deliberate and say you did:
 // alibi: characterization — locks in existing behaviour
 ```
 
+## Two examples
+
+**A test with no alibi.** The fix is real; the test is not evidence for it.
+
+```js
+// the change
+-  for (const item of items) out.push(item);
++  if (seen.has(item.id)) continue;
++  seen.add(item.id);
++  out.push(item);
+
+// the test that shipped with it
+test('de-duplicates the list', () => {
+  const out = dedupe([{ id: 'a' }, { id: 'a' }]);
+  assert.ok(Array.isArray(out));      // it always returned an array
+});
+```
+
+Reverted, this passes. Report it and strengthen it:
+
+```js
+assert.equal(dedupe([{ id: 'a' }, { id: 'a' }]).length, 1);   // now it fails without the fix
+```
+
+**A green suite with a hole in it.** Nothing was fixed; the test that disagreed
+is gone.
+
+```diff
+-test('handles an empty list', () => {
+-  assert.equal(dedupe([]).length, 0);
+-});
+```
+
+The suite is green because there is less of it. Put the test back, or say in
+your summary exactly why it should not exist.
+
 ## Rules
 
 - Never mark a test as characterization to quiet the check.
