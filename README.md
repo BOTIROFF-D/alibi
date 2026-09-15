@@ -6,7 +6,6 @@ This reverts the fix, runs the new test again, and shows you the ones that still
 <p><em>A test that has never failed has never tested anything.</em></p>
 
 <p>
-  <a href="https://www.npmjs.com/package/@botiroff/alibi"><img src="https://img.shields.io/npm/v/@botiroff/alibi?color=f85149&label=npm" alt="npm"></a>
   <a href="https://github.com/BOTIROFF-D/alibi/actions/workflows/ci.yml"><img src="https://github.com/BOTIROFF-D/alibi/actions/workflows/ci.yml/badge.svg" alt="ci"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT"></a>
   <img src="https://img.shields.io/badge/runtime%20deps-0-3fb950" alt="zero runtime dependencies">
@@ -30,7 +29,7 @@ Nothing to install for that — the skill uses git and your own test command.
 For your terminal and CI:
 
 ```
-npm install -g @botiroff/alibi && alibi
+npx -y github:BOTIROFF-D/alibi
 ```
 
 ## The trick

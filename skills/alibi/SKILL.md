@@ -138,7 +138,7 @@ The same check, as one command, with the worktree, the cleanup, the diff
 reading and the report handled for you:
 
 ```bash
-npx -y @botiroff/alibi verify
+npx -y github:BOTIROFF-D/alibi verify
 ```
 
 Exit code `1` means a test passed on the old code, or a test was deleted or
