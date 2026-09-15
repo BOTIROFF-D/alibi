@@ -1,95 +1,109 @@
 ---
 name: alibi
-description: Before reporting a code change as done, prove the tests are evidence for it. Writes down the claims, reverts the change, reruns the new tests against the old source, and refuses to report done while a claim is contradicted. Use at the end of any task that changed code or tests.
+description: Before you say "done, tests pass" — revert your own fix, run the test you just wrote, and check that it fails. A test that has never failed has never tested anything. Use at the end of any task that changed code or tests.
 license: MIT
 ---
 
 # alibi
 
-A test that has never been red has not tested anything. Before you tell anyone
-the work is done, establish which of the tests you wrote would have failed
-without your change.
+Before you report a change as done, prove the tests you wrote are evidence for it.
 
-## When to use this
+**A test that has never failed has never tested anything.**
 
-At the end of any task that changed source or test files. Not during
-exploration, not between edits — once, before reporting the work.
+## When
 
-## Procedure
+At the end of any task that changed source or test files. Once, before you
+report. Not during exploration.
 
-**1. Write the claims down first, before running anything.** Create or update
-`.alibi/claims.md`. One line per claim, each tagged. Only claim what you
-actually did:
+## The check
 
-```markdown
-- [tests] covers the retry path in SessionStore
-- [fix] fixed the race that dropped the second flush
-- [pass] the suite passes
-- [safe] no existing test was removed, skipped or weakened
+Nothing to install. Six commands.
+
+```bash
+# 1. What did you change?
+git status --porcelain
+
+# 2. Make a copy of the world before your change.
+git worktree add --detach /tmp/alibi-check HEAD
+
+# 3. Copy your NEW TESTS into it. Only the tests. Leave the old source alone.
+cp <each new or changed test file> /tmp/alibi-check/<same path>
+
+# 4. Link dependencies so the suite can start (skip if not needed).
+ln -s "$PWD/node_modules" /tmp/alibi-check/node_modules   # or .venv, vendor, target
+
+# 5. Run each new test there, one at a time.
+cd /tmp/alibi-check && <your test command, filtered to one test>
+
+# 6. Clean up.
+git worktree remove --force /tmp/alibi-check
 ```
 
-Tags and what each one means:
+If `HEAD` is not the right baseline — the work spans several commits — use the
+branch point instead: `git merge-base HEAD origin/main`.
 
-| Tag | The claim | What settles it |
-| --- | --- | --- |
-| `tests` | the new tests cover the change | a new test fails when the change is taken away |
-| `fix` | something that was broken is not any more | at least one test fails without the change |
-| `pass` | the suite passes | the suite exits zero |
-| `safe` | nothing was broken to get there | no test deleted, skipped or weakened |
-| `perf` | it is faster | nothing here — attach a benchmark instead |
+## Reading the result
 
-Leave out any claim you are not making. An absent claim costs nothing; a false
-one is the thing this exists to catch.
+| the test | means |
+| --- | --- |
+| **fails** there | good. It is evidence for your change. |
+| **passes** there | it did not test your change. Fix it or say so. |
+| **errors on import** (module not found) | expected for brand-new files. Proves nothing either way. Say so. |
 
-**2. Run it.**
+## Also check, straight from the diff
 
-```
-npx -y @botiroff/alibi verify
+```bash
+git diff HEAD -- '<test paths>'
 ```
 
-Add `--base origin/main` when the work spans several commits rather than the
-working tree. Add `--mutate` when the change is one you would not want to be
-wrong about.
+- A test that is **gone** — put it back, or explain in your summary why it should be.
+- A test that gained **`skip`**, `xfail`, `t.Skip`, `@Disabled` — same.
+- A test that **lost assertions** — say which and why.
 
-**3. Read the verdict and act on it.**
+Never make a suite green by removing the red part.
 
-- **`NO ALIBI`** — that test passes against the source from before your change.
-  It is not evidence for what you did. Either strengthen it until it fails
-  without your change, or, if it is deliberately locking in existing behaviour,
-  mark it in the test file with a comment `alibi: characterization` and say so
-  in your summary.
-- **`PROVISIONAL`** — the test could not run against the old source because the
-  module did not exist yet. Expected for new code. Not evidence either.
-- **A deleted or skipped test** — put it back, or explain in your summary
-  exactly why it should be gone. Never leave this one silent.
-- **`unproven` findings** — a static reading of your test found an assertion
-  that cannot fail, a lone existence check, or the subject mocked out. Look at
-  each one; some are fine, and you should say which and why.
-- **A false claim** — fix the work or remove the claim. Do not do the second
-  one to avoid the first.
+## Then report
 
-**4. Report honestly.** Paste the verdict lines into your summary. If anything
-is `false` or `unproven`, say so in your own words at the top of the summary,
-before the description of what you built. Do not describe work as done while
-`alibi` exits non-zero.
+Say, in your own summary, in this shape:
+
+```
+alibi: 4 new tests · 3 failed without the change · 1 did not
+  ✕ "returns a list" (test/sessions.test.js:14) passes on the code from before the fix
+```
+
+**Do not write "done" or "tests pass" while a new test passes on the old code.**
+Either strengthen it, or mark it deliberate and say you did:
+
+```js
+// alibi: characterization — locks in existing behaviour
+```
 
 ## Rules
 
-- Never mark a test with `alibi: characterization` to make the report quiet.
-  The marker is for tests that genuinely lock in existing behaviour, and it
-  stays visible in the report either way.
-- Never delete, skip, or weaken a test to make a suite green. If a test is
-  wrong, say that it is wrong and why, as its own change.
-- Never claim `[pass]` without having run the suite.
-- If the tool cannot run at all (exit code 3), report that plainly instead of
-  reporting the work as verified.
+- Never mark a test as characterization to quiet the check.
+- Never delete, skip or weaken a test to get a green suite. If a test is wrong,
+  say that it is wrong, as its own change.
+- Never claim the suite passes without having run it.
+- If the check cannot run at all, say that plainly. Do not report the work as
+  verified.
 
-## Why this exists
+## Why
 
-Across 4,882 agent-generated pull requests, the ones that changed both code and
-tests improved coverage over the existing suite in 35.9% of cases in Java and
-22.5% in Python. Among failing coding-agent trajectories in AppWorld, 75.8%
-still reported success. Asking another model to check does not help: no judge
-configuration exceeded AUROC 0.65.
+75.8% of failing coding-agent runs still report success. Asking another model
+to check is a coin flip — best AUROC 0.65 across five judges and five prompt
+strategies, because judges read the confident closing tone instead of the state
+of the machine.
 
-The exit code of a test run against the old source is not a matter of opinion.
+An exit code has no tone of voice.
+
+## Automatic version
+
+The same check, as one command, with the worktree, the cleanup, the diff
+reading and the report handled for you:
+
+```bash
+npx -y @botiroff/alibi verify
+```
+
+Exit code `1` means a test passed on the old code, or a test was deleted or
+skipped. Source and issues: https://github.com/BOTIROFF-D/alibi
